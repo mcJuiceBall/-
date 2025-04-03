@@ -31,18 +31,29 @@ namespace AutomatizationOfSW
         /// </summary>
         public static void KillAllSolidWorksProcesses()
         {
-            var solidWorksProcesses = Process.GetProcessesByName("SLDWORKS");
-            foreach (var proc in solidWorksProcesses)
+            string[] SOLIDWORKS = new string[]
+                                                {
+                                                    "SLDWORKS",
+                                                    "sldworks_fs",
+                                                    "sldProcMon",
+                                                    "swCefSubProc",
+                                                 };
+
+            foreach (var solid in SOLIDWORKS)
             {
-                try
+                var solidWorksProcesses = Process.GetProcessesByName(solid);
+                foreach (var proc in solidWorksProcesses)
                 {
-                    proc.Kill();
-                    proc.WaitForExit(60000);
-                    Log($"Процесс {proc.Id} успешно завершён.");
-                }
-                catch (Exception ex)
-                {
-                    Log($"Ошибка при завершении процесса SolidWorks: {ex.Message}");
+                    try
+                    {
+                        proc.Kill();
+                        proc.WaitForExit(60000);
+                        Log($"Процесс {proc.Id} успешно завершён.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"Ошибка при завершении процесса SolidWorks: {ex.Message}");
+                    }
                 }
             }
         }
@@ -323,7 +334,6 @@ namespace AutomatizationOfSW
         public static void HideExcessDimension()
         {
             string fileName = Path.GetFileName(DrawingPath);
-            Console.WriteLine(fileName);
             if (DrawingConfigProvider.Configurations.TryGetValue(fileName, out DrawingConfig config))
             {
                 string[] NameOfView = config.NameOfView;

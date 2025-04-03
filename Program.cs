@@ -32,7 +32,7 @@ namespace ВыполнитьЗадачиSolidWorks
             };
             watcher.Created += OnFileCreated;
             watcher.EnableRaisingEvents = true;
-
+            ProcessExistingFiles();
             Log("Консольное приложение запущено, мониторинг папки: " + Costants.OnPerfFilePath);
             Console.WriteLine("Нажмите Enter для завершения работы.");
             Console.ReadLine();
@@ -89,7 +89,28 @@ namespace ВыполнитьЗадачиSolidWorks
                 Console.WriteLine("Неизвестный тип файла: " + e.FullPath);
             }
         }
-        
+
+        /// <summary>
+        /// Поиск имеющихся файлов в папке
+        /// </summary>
+        private void ProcessExistingFiles()
+        {
+            try
+            {
+                string[] files = Directory.GetFiles(Costants.OnPerfFilePath);
+
+                foreach (var filePath in files)
+                {
+                    Log($"Обнаружен существующий файл: {Path.GetFileName(filePath)}");
+                    OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Costants.OnPerfFilePath, Path.GetFileName(filePath)));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Ошибка при обработке существующих файлов: " + ex.Message);
+            }
+        }
+
         /// <summary>
         /// Выполнение программы получение чертежей фасадов на ББ
         /// </summary>
