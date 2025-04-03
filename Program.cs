@@ -11,7 +11,9 @@ using System.Threading;
 
 namespace ВыполнитьЗадачиSolidWorks
 {
-
+        /// <summary>
+        /// Обнаружение новых файлов
+        /// </summary>
     public class AntarusFileWatcher
     {
        
