@@ -10,6 +10,8 @@ namespace DrawingConfigInterface
     {
         public string[] NameOfView { get; set; }
         public string[] NotHideDimension { get; set; }
+
+        public string[] DN_Collector { get; set; }
     }
 
     public static class DrawingConfigProvider
@@ -45,12 +47,12 @@ namespace DrawingConfigInterface
                 },
                 NotHideDimension = new[]
                 {
-                    "RD3@Чертежный вид3@MLVР.Drawing",
+                    "RD10@Чертежный вид3@MLVР.Drawing",
                     "RD1@Чертежный вид1@MLVР.Drawing",
                     "RD1@Чертежный вид2@MLVР.Drawing",
                     "RD3@Чертежный вид2@MLVР.Drawing",
                     "RD4@Чертежный вид2@MLVР.Drawing"
-            }
+                }
             },
 
             ["MLV.SLDDRW"] = new DrawingConfig
@@ -68,7 +70,7 @@ namespace DrawingConfigInterface
                     "RD1@Чертежный вид6@MLV.Drawing",
                     "RD3@Чертежный вид6@MLV.Drawing",
                     "RD4@Чертежный вид6@MLV.Drawing"
-            }
+                }
             },
 
             ["IS.SLDDRW"] = new DrawingConfig
@@ -163,7 +165,90 @@ namespace DrawingConfigInterface
                     "D1@Эскиз14@MLH.Drawing",
                     "D2@Эскиз14@MLH.Drawing",
                     "RD1@Чертежный вид11@MLH.Drawing",
-                    "RD2@Чертежный вид11@MLH.Drawing"
+                    "RD2@Чертежный вид11@MLH.Drawing",
+                    "RD3@Чертежный вид11@MLH.Drawing"
+                }
+            }
+        };
+    }
+
+
+    public static class DrawingConfigBMI
+    {
+        public static readonly Dictionary<string, DrawingConfig> Config = new Dictionary<string, DrawingConfig>
+        {
+            ["MLVФ.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                    "$КОНФИГУРАЦИЯ@Фланец<6>",  //Всас
+                    "$КОНФИГУРАЦИЯ@Фланец<5>",  //Напор
+                    "$Состояние@Воротник<33>"    //Наличие жокея 
+                }
+
+            },
+
+            ["MLVР.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                    "$КОНФИГУРАЦИЯ@Фланец<54>", //Всас
+                    "$КОНФИГУРАЦИЯ@Фланец<51>"  //Напор
+                }
+            },
+
+            ["MLV.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                    "$КОНФИГУРАЦИЯ@Фланец<6>", //Всас
+                    "$КОНФИГУРАЦИЯ@Фланец<3>"  //Напор
+                }
+            },
+
+            ["IS.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                   "$КОНФИГУРАЦИЯ@Фланец<4>", //Всас
+                   "$КОНФИГУРАЦИЯ@Фланец<11>" //Напор
+                }
+            },
+
+            ["MST.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                   "$КОНФИГУРАЦИЯ@Фланец<36>", //Всас
+                   "$КОНФИГУРАЦИЯ@Фланец<41>" //Напор
+                }
+            },
+
+            ["MLHФ.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                   "$КОНФИГУРАЦИЯ@Фланец<4>", //Всас
+                   "$КОНФИГУРАЦИЯ@Фланец<10>" //Напор
+                }
+            },
+
+            ["MLHР.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                   "$КОНФИГУРАЦИЯ@Фланец<45>", //Всас
+                   "$КОНФИГУРАЦИЯ@Фланец<140>" //Напор
+                }
+            },
+
+            ["MLH.xlsx"] = new DrawingConfig
+            {
+                DN_Collector = new[]
+                {
+                   "$КОНФИГУРАЦИЯ@Фланец<4>",   //Всас
+                   "$КОНФИГУРАЦИЯ@Фланец<10>",  //Напор
+                   "СтаринаЖокей"    //Наличие жоккея 
                 }
             }
         };

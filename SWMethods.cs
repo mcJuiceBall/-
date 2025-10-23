@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Compression;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,10 @@ using DrawingConfigInterface;
 using static FileHelper;
 using static System.Net.WebRequestMethods;
 using System.Diagnostics;
+using OfficeOpenXml;
+using System.ComponentModel;
+using System.Runtime.InteropServices.ComTypes;
+using System.Collections;
 
 namespace AutomatizationOfSW
 {
@@ -27,36 +32,43 @@ namespace AutomatizationOfSW
         #endregion
 
         /// <summary>
-        /// Завершает все процессы SolidWorks.
+        /// Завершает все процессы из указанного списка.
         /// </summary>
-        public static void KillAllSolidWorksProcesses()
+        public static void KillSelectedProcesses(HashSet<string> solidNames)
         {
-            string[] SOLIDWORKS = new string[]
-                                                {
-                                                    "SLDWORKS",
-                                                    "sldworks_fs",
-                                                    "sldProcMon",
-                                                    "swCefSubProc",
-                                                 };
 
-            foreach (var solid in SOLIDWORKS)
+            // Выборка всех запущенных процессов, совпадающих по имени
+            var toKill = Process.GetProcesses()
+                .Where(p => solidNames.Contains(p.ProcessName.ToLower()));
+
+            foreach (var proc in toKill)
             {
-                var solidWorksProcesses = Process.GetProcessesByName(solid);
-                foreach (var proc in solidWorksProcesses)
+                try
                 {
-                    try
+                    proc.Kill();
+                    // ждём до 5 секунд, пока процесс завершится
+                    if (!proc.WaitForExit(5000))
                     {
-                        proc.Kill();
-                        proc.WaitForExit(60000);
-                        Log($"Процесс {proc.Id} успешно завершён.");
+                        Log($"Процесс {proc.ProcessName} (ID={proc.Id}) не завершился за 5 секунд.");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Log($"Ошибка при завершении процесса SolidWorks: {ex.Message}");
+                        Log($"Процесс {proc.ProcessName} (ID={proc.Id}) успешно завершён.");
                     }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Ошибка при завершении процесса {proc.ProcessName} (ID={proc.Id}): {ex.Message}");
+                }
+                finally
+                {
+                    proc.Dispose();
                 }
             }
         }
+
+
+
 
         /// <summary>
         /// Попытка выполнить операцию с записью в лог результата
@@ -146,7 +158,7 @@ namespace AutomatizationOfSW
                 return;
             }
 
-            IModelDoc2 modelDoc = swModel;
+            IModelDoc2 modelDoc = swApp.ActiveDoc;
 
             if (modelDoc == null)
             {
@@ -184,7 +196,7 @@ namespace AutomatizationOfSW
         /// <summary>
         /// Получение пути сохранения файла
         /// </summary>
-        /// <param name="swDrawing"></param>
+        /// <param NameOfProperties=Название свойства></param>
         /// <returns></returns>
         public static string GetCustomProperties(string NameOfProperties)
         {
@@ -261,6 +273,7 @@ namespace AutomatizationOfSW
             string MaxValueName = "";
             double MaxValue = 0;
             Object[] vDispDim = (Object[])swView.GetDisplayDimensions();
+
             for (int j = 0; j < vDispDim.Length; j++)
             {
                 DisplayDimension swDispDim = (DisplayDimension)vDispDim[j];
@@ -278,7 +291,9 @@ namespace AutomatizationOfSW
                     }
                 }
             }
+
             bool hideMaxDimension = false;
+
             if (specialView && NotHideDimension.Length > 0)
             {
                 for (int j = 0; j < vDispDim.Length; j++)
@@ -288,10 +303,12 @@ namespace AutomatizationOfSW
                     if (swDim.FullName == NotHideDimension[0])
                     {
                         double[] value = swDim.GetValue3((int)swInConfigurationOpts_e.swThisConfiguration, null);
+                        
                         if (value[0] >= MaxValue)
                         {
                             hideMaxDimension = true;
                         }
+
                         break;
                     }
                 }
@@ -320,6 +337,20 @@ namespace AutomatizationOfSW
             try
             {
                 swSheet.SetScale(1, 5 * Math.Round(ScaleValue / 400), false, false);
+            }
+            catch
+            {
+                Console.WriteLine("Не удалось применить масштаб");
+            }
+        }
+
+        public static void AutoScaleDrawingA4(double ScaleValue)
+        {
+            Sheet swSheet = swDrawing.GetCurrentSheet();
+
+            try
+            {
+                swSheet.SetScale(1, ScaleValue, false, false);
             }
             catch
             {
@@ -359,6 +390,7 @@ namespace AutomatizationOfSW
                 ModelPath = Path.Combine(Path.GetDirectoryName(swModel.GetPathName()), Path.GetFileNameWithoutExtension(swModel.GetPathName()) + ".SLDASM");
                 DrawingPath = Path.Combine(Path.GetDirectoryName(ModelPath), Path.GetFileNameWithoutExtension(ModelPath) + ".SLDDRW");
                 swModel.ShowConfiguration("Установка");
+                swModel.ForceRebuild3(false);
                 ModelDoc2 swModelSAT = swApp.OpenDoc6(OpenPathSAT, (int)swDocumentTypes_e.swDocASSEMBLY, 1, "", 0, 0);
                 ExportToSat(swApp, OpenPathSAT, FinalFolder);
                 swApp.CloseDoc(OpenPathSAT);
@@ -371,6 +403,7 @@ namespace AutomatizationOfSW
         public static void CreateDrawingAndModel(string e) 
         {
             Log($"Начинается обработка файла: {e}");
+
             #region Определение переменных
             string filePath = Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e));
             string newFileName = RenameFile(Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e)));
@@ -378,7 +411,7 @@ namespace AutomatizationOfSW
             string OpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDASM";
             string DrawOpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDDRW";
             string OpenPathSAT = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}(SAT).SLDASM";
-            string FinalFolder = $@"S:\.CADAutomation\Модели\{Cod1C}";
+            string FinalFolder = $@"{Costants.RootDirectory}\{Cod1C}";
             #endregion
             
             CopyFileWithOverwrite(e, newFileName);
@@ -405,7 +438,145 @@ namespace AutomatizationOfSW
             {
                 throw new Exception("Ошибка при сохранении в DWG и PDF");
             }
-
         }
+
+        public static void CreateDrawingBMI(string e)
+        {
+            Log($"Начинается обработка файла: {e}");
+
+            #region Определение переменных
+            string filePath = Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e));
+            string newFileName = RenameFile(Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e)));
+            string Cod1C = GetCodeFromFileName(Path.GetFileNameWithoutExtension(e));
+            string OpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDASM";
+            string DrawOpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDDRW";
+            string OpenPathSAT = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}(SAT).SLDASM";
+            string FinalFolder = $@"{Costants.RootDirectory}\{Cod1C}";
+            string filepathBMI = $@"\\sol.elita\Spec\.CADAutomation\SW\БМИ\БМИ_{Path.GetFileNameWithoutExtension(newFileName)}";
+            object DNvsas;
+            object DNnapor;
+            object JOCKEY;
+            object box = null;
+            double[] corners = new double[6];
+            #endregion
+
+            CopyFileWithOverwrite(e, newFileName);
+
+            if (!Directory.Exists(FinalFolder))
+            {
+                Directory.CreateDirectory(FinalFolder);
+            }
+
+            swApp = SolidWorksManager.swApp;
+            swModel = swApp.OpenDoc6(OpenPath, 2, 0, "", 0, 0);
+            ModelPath = Path.Combine(Path.GetDirectoryName(swModel.GetPathName()), Path.GetFileNameWithoutExtension(swModel.GetPathName()) + ".SLDASM");
+            DrawingPath = Path.Combine(Path.GetDirectoryName(ModelPath), Path.GetFileNameWithoutExtension(ModelPath) + ".SLDDRW");
+            swModel.ShowConfiguration("Установка");
+            swModel.ForceRebuild3(false);
+            DrawingConfig config;
+            if (!DrawingConfigBMI.Config.TryGetValue(Path.GetFileName(newFileName), out config))
+            {
+                Console.WriteLine("Нет конфигурации для файла " + newFileName);
+                return;
+            }
+
+            EnsureTempUsable();
+            ExcelPackage.License.SetNonCommercialOrganization("SANEK");
+            using (ExcelPackage package = new ExcelPackage(new FileInfo(newFileName)))
+            {
+                var sheet = package.Workbook.Worksheets[0]; // первый лист
+
+                // Всасывающий
+                DNvsas = FindValueUnderMarker(sheet, config.DN_Collector[0]);
+
+                if ((string)DNvsas == "DN32")
+                {
+                    DNvsas = "DN40";
+                }
+                // Напорный
+                DNnapor = FindValueUnderMarker(sheet, config.DN_Collector[1]);
+                
+                if ((string)DNnapor == "DN32")
+                {
+                    DNnapor = "DN40";
+                }
+
+                JOCKEY = FindValueUnderMarker(sheet, config.DN_Collector[2]);
+
+            }
+            string fileBMI = GetFileBMIParam(@"\\sol.elita\Spec\.CADAutomation\SW\Блок-боксы\");
+
+            if (fileBMI == null)
+            {
+                return;
+            }
+
+            string CodeBMI = GetCodeFromFileName(fileBMI);
+
+            СopyAndDeleteSourceFile(@"\\sol.elita\Spec\.CADAutomation\SW\Блок-боксы\"+fileBMI, Costants.fileConfigBBFronts);
+
+            if ((string)JOCKEY == "Реш")
+            {
+                JOCKEY = "Непог";
+            }
+            else if ((string)JOCKEY == null)
+            {
+                JOCKEY = "Пог";
+            }
+
+            Dictionary<string, string> keyBMI = GetKeyValue(Costants.fileConfigBBFronts);
+
+            using (var package = new ExcelPackage(new FileInfo($@"{filepathBMI}.xlsx")))
+            {
+                var sheet = package.Workbook.Worksheets[0]; // первый лист
+                sheet.Cells[3, 2].Value = keyBMI["ВыводПатрубка"];
+                sheet.Cells[3, 3].Value = keyBMI["Наименование"];
+                sheet.Cells[3, 4].Value = DNnapor;
+                sheet.Cells[3, 5].Value = DNvsas;
+                sheet.Cells[3, 6].Value = JOCKEY;
+                package.Save();
+            }
+            
+            //Запуск программы по применений размеров ББ
+            swApp.RunMacro(Costants.fileMacroBBFronts, "БМИ", "CreateBMI");
+            swModel = swApp.OpenDoc6(filepathBMI + ".SLDASM", 2, 0, "", 0, 0);
+            swModel.ForceRebuild3(false);
+            AssemblyDoc swAssy = (AssemblyDoc)swModel;
+            box=swAssy.GetBox((int)swBoundingBoxOptions_e.swBoundingBoxIncludeRefPlanes);
+            corners = (double[])box;
+            double dx = Math.Abs(corners[3] - corners[0])/120.0;
+            double dy = Math.Abs(corners[4] - corners[1])/70.0;
+            double dz = Math.Abs(corners[5] - corners[2])/80.0;
+            double maxDim = Math.Max(dx, Math.Max(dy, dz)) * 1000.0;
+            maxDim= maxDim = Math.Round(maxDim / 5.0) * 5.0;
+            swDrawing = (DrawingDoc)swApp.OpenDoc6(filepathBMI + ".SLDDRW", 3, 0, "", 0, 0);
+            AutoScaleDrawingA4(maxDim);
+
+            ((ModelDoc2)swDrawing).SaveAs($@"\\sol.elita\Spec\.CADAutomation\Блок-Боксы\БМИ\{CodeBMI}" + ".PDF");
+            ((ModelDoc2)swDrawing).SaveAs($@"\\sol.elita\Spec\.CADAutomation\Блок-Боксы\БМИ\{CodeBMI}" + ".DWG");
+        }
+        /// <summary>
+        /// Проверяет доступность TEMP/TMP и при необходимости выставляет рабочую папку на процесс.
+        /// </summary>
+        static void EnsureTempUsable()
+        {
+            string temp = Path.GetTempPath();
+            try
+            {
+                string probe = Path.Combine(temp, "epplus_probe.tmp");
+                System.IO.File.WriteAllText(probe, "ok");
+                System.IO.File.Delete(probe);
+                
+            }
+            catch
+            {
+                // Если текущий TEMP недоступен — создадим свой и пропишем на процесс
+                string fallback = @"C:\Temp";
+                Directory.CreateDirectory(fallback);
+                System.Environment.SetEnvironmentVariable("TEMP", fallback, EnvironmentVariableTarget.Process);
+                System.Environment.SetEnvironmentVariable("TMP", fallback, EnvironmentVariableTarget.Process);
+            }
+        }
+
     }
 }

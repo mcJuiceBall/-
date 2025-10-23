@@ -8,6 +8,8 @@ using static AutomatizationOfSW.AutoScaleDrawingDimension;
 using static FileHelper;
 using System.Runtime.InteropServices;
 using System.Threading;
+using static VZU.CreateDrawingVZU;
+using System.Collections.Generic;
 
 namespace ВыполнитьЗадачиSolidWorks
 {
@@ -19,6 +21,20 @@ namespace ВыполнитьЗадачиSolidWorks
        
         private FileSystemWatcher watcher;
 
+        public HashSet<string> wordNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "winword",
+                "wordconv"
+            };
+
+        public HashSet<string> solidNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "sldworks",
+                "sldworks_fs",
+                "sldprocmon",
+                "swcefsubproc",
+                "sldexitapp"
+            };
         /// <summary>
         /// Действие программы при запуске
         /// </summary>
@@ -30,6 +46,7 @@ namespace ВыполнитьЗадачиSolidWorks
                 //Filter = "*.",
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
             };
+
             watcher.Created += OnFileCreated;
             watcher.EnableRaisingEvents = true;
             ProcessExistingFiles();
@@ -45,25 +62,41 @@ namespace ВыполнитьЗадачиSolidWorks
         /// <param name="e"></param>
         private void OnFileCreated(object source, FileSystemEventArgs e)
         {
+            Console.WriteLine(e.FullPath);
+            if (e.FullPath.Contains("~$")|| e.FullPath.Contains(".tmp")) return;
             Log($"Обнаружен новый файл: {e.FullPath}");
-            //Открытие SolidWorks
-             
+            Thread.Sleep(1000);
+            
             //Запуск программы создания 3D и 2D моделей Антарус
-            if (e.FullPath.Contains("ЗавестиАнтарус"))
+            if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
             {
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                 swApp => CreateDrawingAndModel(e.FullPath), // Вызов метода с параметрами
                 "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
-                90,// Таймаут в секундах
+                80,// Таймаут в секундах
+                e.FullPath
+                );
+            }
+            else if (e.FullPath.Contains("ЧертежБМИ") && e.FullPath.Contains(".xlsx"))
+            {
+                RunWithTimeout(
+                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+                swApp => CreateDrawingBMI(e.FullPath), // Вызов метода с параметрами
+                "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
+                800,// Таймаут в секундах
                 e.FullPath
                 );
             }
 
+
+
             //Запуск программы расчета нагрузок ББ
-            else if (e.FullPath.Contains("РасчитатьНагрузки_ББ"))
+            else if (e.FullPath.Contains("РасчитатьНагрузки_ББ") && e.FullPath.Contains(".txt"))
             {
-               RunWithTimeout(
+               KillSelectedProcesses(solidNames);
+               KillSelectedProcesses(wordNames);
+                RunWithTimeout(
                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                swApp => ProcessBBStaticLoad(e.FullPath, swApp), // Вызов метода с параметрами
                "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
@@ -73,13 +106,23 @@ namespace ВыполнитьЗадачиSolidWorks
             }
 
             //Запуск программы чертежей фасадов
-            else if (e.FullPath.Contains("ЧертежиФасадов_ББ"))
+            else if (e.FullPath.Contains("ЧертежиФасадов_ББ") && e.FullPath.Contains(".txt"))
             {
+                KillSelectedProcesses(solidNames);
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                 swApp => ProcessFileDrawingFronts(e.FullPath, swApp), // Вызов метода с параметрами
                 "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
                 120,// Таймаут в секундах
+                e.FullPath
+                );
+            }
+
+            else if (e.FullPath.ToLower().Contains("взу") && e.FullPath.Contains(".txt"))
+            {
+                RunWithTimeout(
+                "Не удалось создать чертеж на: " + e.FullPath,
+                200,// Таймаут в секундах
                 e.FullPath
                 );
             }
@@ -95,14 +138,17 @@ namespace ВыполнитьЗадачиSolidWorks
         /// </summary>
         private void ProcessExistingFiles()
         {
+            
             try
             {
                 string[] files = Directory.GetFiles(Costants.OnPerfFilePath);
 
                 foreach (var filePath in files)
                 {
+                    
                     Log($"Обнаружен существующий файл: {Path.GetFileName(filePath)}");
                     OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Costants.OnPerfFilePath, Path.GetFileName(filePath)));
+                    
                 }
             }
             catch (Exception ex)
@@ -136,7 +182,7 @@ namespace ВыполнитьЗадачиSolidWorks
             swApp.RunMacro(Costants.fileMacroBBStaticLoad, "НагрузкиББ", "SetSizes");
  
         }
-        
+
         /// <summary>
         /// Запустить метод с таймаутом выполнения
         /// </summary>
@@ -149,96 +195,191 @@ namespace ВыполнитьЗадачиSolidWorks
         {
             bool success = true;
             bool completed = false;
+
             int i = 1;
             Exception threadException = null;
 
             try
+            {
+                while (completed == false && (i <= 2))
                 {
-                    while (completed == false && (i <= 2))
+
+                    Log($"Попытка {i} создать чертеж и модель");
+
+                    ISldWorks swApp = initSwApp();
+
+                    if (swApp == null)
                     {
-                    
-                        Log($"Попытка {i} создать чертеж и модель");
-
-                        ISldWorks swApp = initSwApp();
-
-                        if (swApp == null)
+                        Log("Ошибка инициализации SolidWorks.");
+                        success = false;
+                        break;
+                    }
+                    threadException = null;
+                    Thread thread = new Thread(() =>
+                    {
+                        try
                         {
-                            Log("Ошибка инициализации SolidWorks.");
-                            success = false;
-                            break;
+                            action(swApp);
                         }
-                        threadException = null;
-                        Thread thread = new Thread(() =>
+                        catch (Exception ex)
                         {
-                            try
-                            {
-                                action(swApp);
-                            }
-                            catch (Exception ex)
-                            {
-                                threadException = ex;
-                            }
-                        });
+                            threadException = ex;
+                        }
+                    });
 
-                        thread.SetApartmentState(ApartmentState.STA);
-                        thread.Start();
+                    thread.SetApartmentState(ApartmentState.STA);
+                    thread.Start();
 
-                        if (!thread.Join(TimeSpan.FromSeconds(timeoutSeconds)))
+                    if (!thread.Join(TimeSpan.FromSeconds(timeoutSeconds)))
+                    {
+                        Log($"Попытка {i} неуспешна—{logMessage}");
+                        success = false;
+                        KillSelectedProcesses(solidNames);
+                    }
+                    else
+                    {
+                        if (threadException != null)
                         {
-                            Log($"Попытка {i} неуспешна—{logMessage}");
+                            Log($"Попытка {i} завершилась исключением: {threadException.Message}");
                             success = false;
-                            KillAllSolidWorksProcesses();
+                            KillSelectedProcesses(solidNames);
                         }
                         else
                         {
-                            if (threadException != null)
-                            {
-                                Log($"Попытка {i} завершилась исключением: {threadException.Message}");
-                                success = false;
-                                swApp.CloseAllDocuments(true);
-                            }
-                            else 
-                            {
-                                Log($"Попытка {i} успешна!");
-                                swApp.CloseAllDocuments(true);
-                                completed = true;
-                            }
+                            Log($"Попытка {i} успешна!");
+                            swApp.CloseAllDocuments(true);
+                            completed = true;
                         }
-                        i++;
-                    }  
+                    }
+                    i++;
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                Log($"Основное действие завершилось с ошибкой: {ex.Message}");
+                success = false;
+                KillSelectedProcesses(solidNames);
+            }
+
+            finally
+            {
+                //Формирование конечного пути файла с параметрами
+                string finalFilePath = Path.Combine(success ? Costants.filePathFinal : Costants.filePathFinalBad, Path.GetFileName(e));
+
+                if (finalFilePath.Contains("ЧертежиФасадов_ББ") || finalFilePath.Contains("РасчитатьНагрузки_ББ"))
                 {
-                    Log($"Основное действие завершилось с ошибкой: {ex.Message}");
-                    success = false;
+                    finalFilePath = RemoveFileWithAddPostFix(finalFilePath);
                 }
 
-                finally
+                //Удаление файла если он существует
+                if (File.Exists(finalFilePath))
                 {
-                    //Формирование конечного пути файла с параметрами
-                    string finalFilePath = Path.Combine(success ? Costants.filePathFinal : Costants.filePathFinalBad, Path.GetFileName(e));
-                    if (finalFilePath.Contains("ЧертежиФасадов_ББ") || finalFilePath.Contains("РасчитатьНагрузки_ББ"))
-                    {
-                        finalFilePath = RemoveFileWithAddPostFix(finalFilePath);
-                    }
-                    //Удаление файла если он существует
-                    if (File.Exists(finalFilePath))
-                    {
-                        File.Delete(finalFilePath);
-                    }
-                    //Перемещение файла
-                    File.Move(e, finalFilePath);
-
-                    //Записть в лог
-                    Log($"Обработка файла завершена: {e}");
+                    File.Delete(finalFilePath);
                 }
+
+                //Перемещение файла
+                File.Move(e, finalFilePath);
+
+                //Записть в лог
+                Log($"Обработка файла завершена: {e}");
+            }
+        }
+
+
+            /// <summary>
+            /// Запустить метод с таймаутом выполнения
+            /// </summary>
+            /// <param name="logMessage">Сообщение в случае неудачи</param>
+            /// <param name="timeoutSeconds">Время на выполнение</param>
+            /// <param name="e">Путь до найденного файла</param>
+        public void RunWithTimeout(string logMessage, int timeoutSeconds, string e)
+        {
+            bool success = true;
+            bool completed = false;
+
+            int i = 1;
+            Exception threadException = null;
+
+            try
+            {
+                while (completed == false && (i <= 2))
+                {
+
+                    Log($"Попытка {i} создать чертеж и модель");
+
+
+                    threadException = null;
+                    Thread thread = new Thread(() =>
+                    {
+                        try
+                        {
+                            VZUCreateDWG(e);
+                        }
+                        catch (Exception ex)
+                        {
+                            threadException = ex;
+                        }
+                    });
+
+                    thread.SetApartmentState(ApartmentState.STA);
+                    thread.Start();
+
+                    if (!thread.Join(TimeSpan.FromSeconds(timeoutSeconds)))
+                    {
+                        Log($"Попытка {i} неуспешна—{logMessage}");
+                        success = false;
+                    }
+                    else
+                    {
+                        if (threadException != null)
+                        {
+                            Log($"Попытка {i} завершилась исключением: {threadException.Message}");
+                            success = false;
+                        }
+                        else
+                        {
+                            Log($"Попытка {i} успешна!");
+                            completed = true;
+                        }
+                    }
+                    i++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Основное действие завершилось с ошибкой: {ex.Message}");
+                success = false;
+            }
+
+            finally
+            {
+                //Формирование конечного пути файла с параметрами
+                string finalFilePath = Path.Combine(success ? Costants.filePathFinal : Costants.filePathFinalBad, Path.GetFileName(e));
+
+                if (finalFilePath.Contains("ЧертежиФасадов_ББ") || finalFilePath.Contains("РасчитатьНагрузки_ББ"))
+                {
+                    finalFilePath = RemoveFileWithAddPostFix(finalFilePath);
+                }
+
+                //Удаление файла если он существует
+                if (File.Exists(finalFilePath))
+                {
+                    File.Delete(finalFilePath);
+                }
+
+                //Перемещение файла
+                File.Move(e, finalFilePath);
+
+                //Записть в лог
+                Log($"Обработка файла завершена: {e}");
+            }
 
         }
 
         public static void Main()
         {
-                var app = new AntarusFileWatcher();
-                app.Start();
+            var app = new AntarusFileWatcher();
+            app.Start();
         }
     }
 }

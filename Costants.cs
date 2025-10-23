@@ -11,7 +11,7 @@ using System.Threading.Tasks;
         /// <summary>
         /// Папка где находятся чертежи и 3D модели установок 
         /// </summary>
-        public const string RootDirectorySW =@"\\sol.elita\Spec\.CADAutomation\SW\Модели";
+        public const string RootDirectorySW = @"\\sol.elita\Spec\.CADAutomation\SW\Модели";
  
         /// <summary>
         /// Папка где находятся модели SolidWorks установок 
@@ -22,6 +22,7 @@ using System.Threading.Tasks;
         /// Файл ведения Лога
         /// </summary>
         public const string logFile = @"\\sol.elita\Spec\.CADAutomation\service_log.txt";
+
 
         /// <summary>
         /// Папка для отслеживания появления новых файлов
@@ -57,5 +58,7 @@ using System.Threading.Tasks;
         /// Файл макроса получения отчета расчета прочности
         /// </summary>
         public const string fileMacroBBStaticLoad = @"\\sol.elita\Spec\.CADAutomation\SW\Блок-боксы\Макросы для 1С\Расчет прочности Блок-Бокса.swp";
+
+        
 
     }
