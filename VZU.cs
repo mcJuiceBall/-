@@ -60,8 +60,8 @@ namespace VZU
 
             var map = new Dictionary<string, (string pdfName, string dwgPath)>(StringComparer.OrdinalIgnoreCase)
             {
-                ["фундамент"] = ($"{code}. ЗаданиеНаФундамент.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\ЗаданиеНаФундамент.DWG"),
-                ["спецификация"] = ($"{code}. Спецификация.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\Спецификация.DWG"),
+                ["фундамент"] = ($"{code}. ЗаданиеНаФундаментВЗУ.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\ЗаданиеНаФундамент.DWG"),
+                ["спецификация"] = ($"{code}. СпецификацияВЗУ.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\Спецификация.DWG"),
                 ["принципиалка взу 1,2 кат, вентиляция"] = ($"{code}. Принципиалка взу 1,2 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат, вентиляция.DWG"),
                 ["принципиалка взу 1,2 кат"] = ($"{code}. Принципиалка взу 1,2 кат.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат.DWG"),
                 ["принципиалка взу 3 кат, вентиляция"] = ($"{code}. Принципиалка взу 3 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 3 кат, вентиляция.DWG"),
