@@ -16,6 +16,7 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Globalization;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace VZU
 {
@@ -47,8 +48,8 @@ namespace VZU
                 for (int i = 0; i < targetFiles.Length; i++)
                 {
                     var suffix = targetFiles.Length == 1
-                        ? $"{code}. ВЗУ.pdf"
-                        : $"{code} ({i + 1}). ВЗУ.pdf";
+                        ? $"{code}. ЧертежВЗУ.pdf"
+                        : $"{code} ({i + 1}). ЧертежВЗУ.pdf";
 
                     finalPath = Path.Combine(baseDir, suffix);
                     CreateVZU(targetFiles[i], finalPath);
@@ -59,12 +60,12 @@ namespace VZU
 
             var map = new Dictionary<string, (string pdfName, string dwgPath)>(StringComparer.OrdinalIgnoreCase)
             {
-                ["фундамент"] = ($"{code}. Задание на фундамент.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\ЗаданиеНаФундамент.DWG"),
+                ["фундамент"] = ($"{code}. ЗаданиеНаФундамент.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\ЗаданиеНаФундамент.DWG"),
                 ["спецификация"] = ($"{code}. Спецификация.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\Спецификация.DWG"),
-                ["принципиалка взу 1,2 кат, вентиляция"] = ($"{code}. Принципиальная схема 1,2 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат, вентиляция.DWG"),
-                ["принципиалка взу 1,2 кат"] = ($"{code}. Принципиальная схема 1,2 кат.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат.DWG"),
-                ["принципиалка взу 3 кат, вентиляция"] = ($"{code}. Принципиальная схема 3 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 3 кат, вентиляция.DWG"),
-                ["принципиалка взу 3 кат"] = ($"{code}. Принципиальная схема 3 кат.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 3 кат.DWG")
+                ["принципиалка взу 1,2 кат, вентиляция"] = ($"{code}. Принципиалка взу 1,2 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат, вентиляция.DWG"),
+                ["принципиалка взу 1,2 кат"] = ($"{code}. Принципиалка взу 1,2 кат.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 1,2 кат.DWG"),
+                ["принципиалка взу 3 кат, вентиляция"] = ($"{code}. Принципиалка взу 3 кат, вентиляция.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 3 кат, вентиляция.DWG"),
+                ["принципиалка взу 3 кат"] = ($"{code}. принципиалка взу 3 кат.pdf", @"\\sol.elita\Spec\.CADAutomation\ВЗУ\принципиалка взу 3 кат.DWG")
             };
 
             // Находим первое совпадение по ключу
@@ -72,6 +73,9 @@ namespace VZU
             if (entry.Key != null)
             {
                 finalPath = Path.Combine(baseDir, entry.Value.pdfName);
+                if (File.Exists(finalPath))
+                    File.Delete(finalPath);
+
                 CreatePDFFileVZU(entry.Value.dwgPath, filepath, finalPath);
             }
         }
@@ -87,13 +91,11 @@ namespace VZU
             try
             {
                 AcadDocument doc = acad.Documents.Open(pathfile);
-                
+
                 doc.SendCommand("_DATALINKUPDATE\n_u\n_k\n");
                 Thread.Sleep(2000);
-                AcadPlot plot = doc.Plot;
-                plot.PlotToFile(finalpath, "DWG To PDF.pc3");
-                Thread.Sleep(45000);
-                Console.WriteLine("Время вышло");
+                PlotWait.PlotToPdfAndWait(acad, doc, finalpath);
+                PdfCloser.ClosePdfWindowByTitle(finalpath, TimeSpan.FromSeconds(10));
                 acad.ActiveDocument.Close(true);
             }
             catch (System.Exception ex)
@@ -350,7 +352,7 @@ namespace VZU
                     string content = mleader.TextString;
                     if (!string.IsNullOrEmpty(content) && content.Contains(baseValue))
                     {
-                        mleader.TextString = content.Replace(baseValue, "DN"+keyValue);
+                        mleader.TextString = content.Replace(baseValue, "DN" + keyValue);
                         return true;
                     }
                 }
@@ -360,7 +362,7 @@ namespace VZU
             return false;
         }
 
-        static void CreatePDFFileVZU(string file, string filepath,string finalpath)
+        static void CreatePDFFileVZU(string file, string filepath, string finalpath)
         {
             var result = ReadParameters(filepath);
             AcadDocument doc = acad.Documents.Open(file);
@@ -372,14 +374,13 @@ namespace VZU
                 {
                     string baseValue = kvp.Key;
                     string keyValue = kvp.Value;
-                    ChangeBaseValue(baseValue, keyValue, doc); 
+                    ChangeBaseValue(baseValue, keyValue, doc);
                 }
 
-                AcadPlot plot = doc.Plot;
-                plot.PlotToFile(finalpath, "DWG To PDF.pc3");
-                Thread.Sleep(60000);
-                Console.WriteLine("Время вышло");
-                acad.ActiveDocument.Close(false);
+                PlotWait.PlotToPdfAndWait(acad, doc, finalpath);
+                PdfCloser.ClosePdfWindowByTitle(finalpath, TimeSpan.FromSeconds(10));
+
+                doc.Close(false);
             }
             catch (System.Exception ex)
             {
@@ -389,6 +390,159 @@ namespace VZU
             {
                 acad.Quit();
             }
+        }
+
+    }
+
+
+    static class PlotWait
+    {
+        static ManualResetEventSlim done = new ManualResetEventSlim(false);
+        static _DAcadApplicationEvents_BeginPlotEventHandler onBegin;
+        static _DAcadApplicationEvents_EndPlotEventHandler onEnd;
+
+        public static void PlotToPdfAndWait(AcadApplication acad, AcadDocument doc, string pdfPath)
+        {
+            try { doc.SetVariable("BACKGROUNDPLOT", 0); } catch { }
+
+            onBegin = new _DAcadApplicationEvents_BeginPlotEventHandler(BeginPlot);
+            onEnd = new _DAcadApplicationEvents_EndPlotEventHandler(EndPlot);
+            acad.BeginPlot += onBegin;
+            acad.EndPlot += onEnd;
+            done.Reset();
+
+            try
+            {
+                var plot = doc.Plot;
+                plot.PlotToFile(pdfPath, "DWG To PDF.pc3");
+
+                if (!done.Wait(TimeSpan.FromMinutes(5)))
+                    throw new TimeoutException("EndPlot не пришёл — драйвер завис?");
+
+                WaitFileStable(pdfPath, TimeSpan.FromMinutes(1));
+            }
+            finally
+            {
+                try { acad.BeginPlot -= onBegin; } catch { }
+                try { acad.EndPlot -= onEnd; } catch { }
+            }
+        }
+
+        static void BeginPlot(string drawingName) => done.Reset();
+        static void EndPlot(string drawingName) => done.Set();
+
+        static void WaitFileStable(string path, TimeSpan timeout)
+        {
+            var until = DateTime.UtcNow + timeout;
+            long last = -1; int stable = 0;
+
+            while (DateTime.UtcNow < until)
+            {
+                if (File.Exists(path))
+                {
+                    long sz = 0;
+                    try { sz = new FileInfo(path).Length; } catch { }
+                    if (sz > 0 && sz == last && CanOpen(path))
+                    {
+                        if (++stable >= 2) return; 
+                    }
+                    else stable = 0;
+                    last = sz;
+                }
+                Thread.Sleep(200);
+            }
+        }
+
+        static bool CanOpen(string path)
+        {
+            try { using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) return fs.Length > 0; }
+            catch { return false; }
+        }
+    }
+
+
+        static class PdfCloser
+    {
+        // WinAPI
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+        [DllImport("user32.dll")] private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        [DllImport("user32.dll")] private static extern int GetWindowTextLength(IntPtr hWnd);
+        [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hWnd);
+        [DllImport("user32.dll")] private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        private const uint WM_CLOSE = 0x0010;
+
+        /// <summary>
+        /// Находит окно, в заголовке которого встречается имя PDF, и шлёт WM_CLOSE.
+        /// Ждёт исчезновения окна до timeout.
+        /// </summary>
+        public static bool ClosePdfWindowByTitle(string pdfPath, TimeSpan timeout)
+        {
+            if (string.IsNullOrEmpty(pdfPath)) return false;
+            string needle = System.IO.Path.GetFileName(pdfPath);   // "file.pdf"
+            if (string.IsNullOrEmpty(needle)) return false;
+            string needleLower = needle.ToLowerInvariant();
+
+            DateTime until = DateTime.UtcNow + timeout;
+            IntPtr target = IntPtr.Zero;
+
+            // Поищем окно несколько раз — вьюер может открыться с задержкой
+            while (DateTime.UtcNow < until)
+            {
+                target = FindWindowByTitleContains(needleLower);
+                if (target != IntPtr.Zero)
+                {
+                    // Вежливо закрываем
+                    PostMessage(target, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+
+                    // ждём, что окно исчезнет
+                    if (WaitWindowGone(target, TimeSpan.FromSeconds(5)))
+                        return true;
+                    // если не исчезло — попробуем найти заново (вдруг хэндл сменился)
+                }
+                Thread.Sleep(200);
+            }
+            return false;
+        }
+
+        private static IntPtr FindWindowByTitleContains(string needleLower)
+        {
+            IntPtr found = IntPtr.Zero;
+
+            EnumWindows((hWnd, lParam) =>
+            {
+                if (!IsWindowVisible(hWnd)) return true;
+
+                int len = GetWindowTextLength(hWnd);
+                if (len <= 0) return true;
+
+                var sb = new StringBuilder(len + 1);
+                GetWindowText(hWnd, sb, sb.Capacity);
+                string title = sb.ToString();
+
+                if (!string.IsNullOrEmpty(title) && title.ToLowerInvariant().Contains(needleLower))
+                {
+                    found = hWnd;
+                    return false; // стоп
+                }
+                return true; // продолжить
+            }, IntPtr.Zero);
+
+            return found;
+        }
+
+        private static bool WaitWindowGone(IntPtr hWnd, TimeSpan timeout)
+        {
+            DateTime until = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < until)
+            {
+                int len = GetWindowTextLength(hWnd);
+                if (len <= 0) return true; // окно пропало/неактивно
+                Thread.Sleep(200);
+            }
+            return false;
         }
     }
 
