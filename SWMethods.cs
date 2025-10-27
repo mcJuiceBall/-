@@ -17,7 +17,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices.ComTypes;
 using System.Collections;
 
-namespace AutomatizationOfSW
+namespace ЗавестиАнтарус
 {
 
     public class AutoScaleDrawingDimension

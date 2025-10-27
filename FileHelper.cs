@@ -161,4 +161,38 @@ using OfficeOpenXml;
             return null;
         }
 
+
+
+    /// <summary>
+    /// Считывание параметров с текстового файла c разделителем 
+    /// </summary>
+    /// <param name="path">путь до файла с параметрами</param>
+    /// <param name="splitter">Разделитель в файле</param>
+    /// <returns>Словарь с ключами и параметрами</returns>
+    public static Dictionary<string, string> ReadParameters(string path, char splitter)
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            using (var reader = new StreamReader(path, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    int idx = line.IndexOf(splitter);
+                    if (idx <= 0)
+                        continue;
+
+                    string key = line.Substring(0, idx).Trim();
+                    string value = line.Substring(idx + 1).Trim();
+
+                    result[key] = value;
+                }
+            }
+
+            return result;
+        }
+
 }

@@ -124,6 +124,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RKD_ANTARUS.cs" />
     <Compile Include="PumpFrame.cs" />
     <Compile Include="VZU.cs" />
     <Compile Include="Costants.cs" />

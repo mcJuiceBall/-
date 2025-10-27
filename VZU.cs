@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Collections;
 using System.Runtime.InteropServices;
+using static FileHelper;
 
 namespace VZU
 {
@@ -119,7 +120,7 @@ namespace VZU
             string rootpath = @"\\sol.elita\Spec\.CADAutomation\ВЗУ";
             string patternpath = $@"{rootpath}\Шаблон.xlsx";
             string[] targetpath;
-            Dictionary<string, string> parameters = ReadParameters(filePath);
+            Dictionary<string, string> parameters = FileHelper.ReadParameters(filePath,'=');
             parameters.TryGetValue("НаименованиеПозицииВЗУ", out string nameValue);
             parameters.TryGetValue("Специалист", out string creatorValue);
             parameters.TryGetValue("ТЗ", out string tzValue);
@@ -140,8 +141,7 @@ namespace VZU
             if (DN.Contains("250"))
             {
                 targetpath = new string[] {
-                                           $@"{rootpath}\{DN} (1).DWG",
-                                           $@"{rootpath}\{DN} (2).DWG"
+                                            $@"{rootpath}\{DN}.DWG"
                                           };
             }
             else
@@ -154,36 +154,7 @@ namespace VZU
             return targetpath;
         }
 
-        /// <summary>
-        /// Считывание параметров ВЗУ с текстового файла
-        /// </summary>
-        /// <param name="path">путь до файла с параметрами</param>
-        /// <returns>Словарь с ключами и параметрами</returns>
-        static Dictionary<string, string> ReadParameters(string path)
-        {
-            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            using (var reader = new StreamReader(path, Encoding.UTF8))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    int idx = line.IndexOf('=');
-                    if (idx <= 0)
-                        continue;
-
-                    string key = line.Substring(0, idx).Trim();
-                    string value = line.Substring(idx + 1).Trim();
-
-                    result[key] = value;
-                }
-            }
-
-            return result;
-        }
+        
 
         /// <summary>
         /// 
@@ -364,7 +335,7 @@ namespace VZU
 
         static void CreatePDFFileVZU(string file, string filepath, string finalpath)
         {
-            var result = ReadParameters(filepath);
+            var result = ReadParameters(filepath, '=');
             AcadDocument doc = acad.Documents.Open(file);
             doc.SendCommand("_DATALINKUPDATE\n_u\n_k\n");
             Thread.Sleep(2000);

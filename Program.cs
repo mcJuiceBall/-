@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
-using static AutomatizationOfSW.AutoScaleDrawingDimension;
+using static ЗавестиАнтарус.AutoScaleDrawingDimension;
 using static FileHelper;
 using System.Runtime.InteropServices;
 using System.Threading;
