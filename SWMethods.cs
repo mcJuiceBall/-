@@ -359,6 +359,25 @@ namespace ЗавестиАнтарус
         }
 
         /// <summary>
+        /// Возвращает величину масштаба Х к которой нужно привести чертеж формата 1:Х
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public static double GetScaleValue(ModelDoc2 model) 
+        {
+
+            AssemblyDoc swAssy = (AssemblyDoc)model;
+            object box = swAssy.GetBox((int)swBoundingBoxOptions_e.swBoundingBoxIncludeRefPlanes);
+            double[] corners = (double[])box;
+            double dx = Math.Abs(corners[3] - corners[0]) / 120.0;
+            double dy = Math.Abs(corners[4] - corners[1]) / 70.0;
+            double dz = Math.Abs(corners[5] - corners[2]) / 80.0;
+            double maxDim = Math.Max(dx, Math.Max(dy, dz)) * 1000.0;
+            maxDim = maxDim = Math.Round(maxDim / 5.0) * 5.0;
+            return maxDim;
+        }
+
+        /// <summary>
         /// Определение типа установки и запуск ActionWithDimension (обработку размеров на чертеже)
         /// </summary>
         /// <param name="swDrawing">Чертеж</param>
@@ -385,15 +404,15 @@ namespace ЗавестиАнтарус
         /// <param name="FinalFolder"></param>
         public static void Create3Dmodel(string OpenPath,string OpenPathSAT,string FinalFolder) 
         {
-                swApp = SolidWorksManager.swApp;
-                swModel = swApp.OpenDoc6(OpenPath, 2, 0, "", 0, 0);
-                ModelPath = Path.Combine(Path.GetDirectoryName(swModel.GetPathName()), Path.GetFileNameWithoutExtension(swModel.GetPathName()) + ".SLDASM");
-                DrawingPath = Path.Combine(Path.GetDirectoryName(ModelPath), Path.GetFileNameWithoutExtension(ModelPath) + ".SLDDRW");
-                swModel.ShowConfiguration("Установка");
-                swModel.ForceRebuild3(false);
-                ModelDoc2 swModelSAT = swApp.OpenDoc6(OpenPathSAT, (int)swDocumentTypes_e.swDocASSEMBLY, 1, "", 0, 0);
-                ExportToSat(swApp, OpenPathSAT, FinalFolder);
-                swApp.CloseDoc(OpenPathSAT);
+            swApp = SolidWorksManager.swApp;
+            swModel = swApp.OpenDoc6(OpenPath, 2, 0, "", 0, 0);
+            ModelPath = Path.Combine(Path.GetDirectoryName(swModel.GetPathName()), Path.GetFileNameWithoutExtension(swModel.GetPathName()) + ".SLDASM");
+            DrawingPath = Path.Combine(Path.GetDirectoryName(ModelPath), Path.GetFileNameWithoutExtension(ModelPath) + ".SLDDRW");
+            swModel.ShowConfiguration("Установка");
+            swModel.ForceRebuild3(false);
+            ModelDoc2 swModelSAT = swApp.OpenDoc6(OpenPathSAT, (int)swDocumentTypes_e.swDocASSEMBLY, 1, "", 0, 0);
+            ExportToSat(swApp, OpenPathSAT, FinalFolder);
+            swApp.CloseDoc(OpenPathSAT);
         }
 
         /// <summary>
