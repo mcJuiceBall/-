@@ -106,70 +106,69 @@ namespace АнтарусРКД
         /// Словарь с наименованием файлов на которые необходимо выгрузить чертежи
         /// </summary>
         private static readonly Dictionary<string, Func<List<string>>> Handlers =
-            new Dictionary<string, Func<List<string>>>(StringComparer.Ordinal)
-            {
-                { "ч.ст.|16", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
+        new Dictionary<string, Func<List<string>>>(StringComparer.Ordinal)
+        {
+            { "ч.ст.|16|MST", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
 
-                    }
-                },
-
-                { "ч.ст.|16/25", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
-                    }
-                },
-
-                { "ч.ст.|25", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
-                    }
-                },
-
-                { "н.ст.|16", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
-                    }
-
-                },
-
-                { "н.ст.|16/25", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
-                    }
-                },
-
-                { "н.ст.|25", () =>
-                    {
-                        var files = new List<string>();
-                        files.Add("");
-                        files.Add("");
-                        files.Add("");
-                        return files;
-                    }
                 }
-            };
+            },
 
+            { "ч.ст.|16/25", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
+                }
+            },
+
+            { "ч.ст.|25", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
+                }
+            },
+
+            { "н.ст.|16", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
+                }
+
+            },
+
+            { "н.ст.|16/25", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
+                }
+            },
+
+            { "н.ст.|25", () =>
+                {
+                    var files = new List<string>();
+                    files.Add("");
+                    files.Add("");
+                    files.Add("");
+                    return files;
+                }
+            }
+        };
     }
 }
