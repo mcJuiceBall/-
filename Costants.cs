@@ -9,14 +9,17 @@ using System.Threading.Tasks;
     {
 
         /// <summary>
-        /// Папка где находятся чертежи и 3D модели установок 
-        /// </summary>
-        public const string RootDirectorySW = @"\\sol.elita\Spec\.CADAutomation\SW\Модели";
- 
-        /// <summary>
         /// Папка где находятся модели SolidWorks установок 
         /// </summary>
+        public const string RootDirectorySW = @"\\sol.elita\Spec\.CADAutomation\SW\Модели";
+
+
+        /// <summary>
+        /// Папка где находятся чертежи и 3D модели установок 
+        /// </summary>
         public const string RootDirectory = @"\\sol.elita\Spec\.CADAutomation\Модели";
+
+        public const string RootDirectorySEARCH = @"\\sol.elita\Spec\.CADAutomation\МоделиСерч";
 
         /// <summary>
         /// Файл ведения Лога
@@ -34,15 +37,20 @@ using System.Threading.Tasks;
         /// </summary>
         public const string filePathFinal = @"\\sol.elita\Spec\.CADAutomation\ЗадачиВыполненые";
 
+        public const string filePathFinalSEARCH = @"\\sol.elita\Spec\.CADAutomation\ЗадачиВыполненые";
+
         /// <summary>
         /// Папка для не выполненных заданий
         /// </summary>
         public const string filePathFinalBad = @"\\sol.elita\Spec\.CADAutomation\ЗадачиНеВыполненые";
 
-        /// <summary>
-        /// Файл конфигурации ЧОВ/Фасады Блок-бокса
-        /// </summary>
-        public const string fileConfigBBFronts= @"\\sol.elita\Spec\.CADAutomation\SW\Блок-боксы\ЧертежиФасадов_ББ.txt";
+        public const string filePathFinalBadSEARCH = @"\\sol.elita\Spec\.CADAutomation\СерчНеВыполнено";
+
+
+    /// <summary>
+    /// Файл конфигурации ЧОВ/Фасады Блок-бокса
+    /// </summary>
+    public const string fileConfigBBFronts= @"\\sol.elita\Spec\.CADAutomation\SW\Блок-боксы\ЧертежиФасадов_ББ.txt";
 
         /// <summary>
         /// Файл конфигурации расчета прочности Блок-бокса

@@ -84,6 +84,7 @@ using OfficeOpenXml;
             //Убрать из названия "ЗавестиАнтарус"
             renamed = Regex.Replace(renamed, " ЗавестиАнтарус", "");
             renamed = Regex.Replace(renamed, " СоздатьЧертежБМИ", "");
+            renamed = Regex.Replace(renamed, " НаСерч", "");
         //Новый путь файла
         string newPath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, renamed);
             return newPath;

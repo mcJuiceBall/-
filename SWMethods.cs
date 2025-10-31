@@ -421,8 +421,9 @@ namespace ЗавестиАнтарус
         /// <param name="e"></param>
         public static void CreateDrawingAndModel(string e) 
         {
-            Log($"Начинается обработка файла: {e}");
+            string rd;
 
+            Log($"Начинается обработка файла: {e}");
             #region Определение переменных
             string filePath = Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e));
             string newFileName = RenameFile(Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e)));
@@ -430,7 +431,15 @@ namespace ЗавестиАнтарус
             string OpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDASM";
             string DrawOpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDDRW";
             string OpenPathSAT = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}(SAT).SLDASM";
-            string FinalFolder = $@"{Costants.RootDirectory}\{Cod1C}";
+            if (e.Contains("НаСерч"))
+            {
+                rd = Costants.RootDirectorySEARCH;
+            }
+            else 
+            {
+                rd = Costants.RootDirectory;
+            }
+            string FinalFolder = $@"{rd}\{Cod1C}";
             #endregion
             
             CopyFileWithOverwrite(e, newFileName);

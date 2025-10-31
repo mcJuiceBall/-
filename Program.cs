@@ -66,9 +66,20 @@ namespace ВыполнитьЗадачиSolidWorks
             if (e.FullPath.Contains("~$")|| e.FullPath.Contains(".tmp")) return;
             Log($"Обнаружен новый файл: {e.FullPath}");
             Thread.Sleep(1000);
-            
+
             //Запуск программы создания 3D и 2D моделей Антарус
             if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
+            {
+                RunWithTimeout(
+                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+                swApp => CreateDrawingAndModel(e.FullPath), // Вызов метода с параметрами
+                "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
+                80,// Таймаут в секундах
+                e.FullPath
+                );
+            }
+
+            else if(e.FullPath.Contains("НаСерч") && e.FullPath.Contains(".xlsx"))
             {
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
@@ -89,7 +100,16 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
-
+            //else if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
+            //{
+            //    RunWithTimeout(
+            //    () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+            //    swApp => CreateDrawingBMI(e.FullPath), // Вызов метода с параметрами
+            //    "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
+            //    800,// Таймаут в секундах
+            //    e.FullPath
+            //    );
+            //}
 
             //Запуск программы расчета нагрузок ББ
             else if (e.FullPath.Contains("РасчитатьНагрузки_ББ") && e.FullPath.Contains(".txt"))
@@ -264,6 +284,19 @@ namespace ВыполнитьЗадачиSolidWorks
             finally
             {
                 //Формирование конечного пути файла с параметрами
+                string fpfinal;
+                string fpfinalbad;
+
+                if (e.Contains("НаСерч"))
+                {
+                    fpfinal = Costants.filePathFinalSEARCH;
+                    fpfinalbad = Costants.filePathFinalBadSEARCH;
+                }
+                else
+                {
+                    fpfinal = Costants.filePathFinal;
+                    fpfinalbad = Costants.filePathFinalBad;
+                }
                 string finalFilePath = Path.Combine(success ? Costants.filePathFinal : Costants.filePathFinalBad, Path.GetFileName(e));
 
                 if (finalFilePath.Contains("ЧертежиФасадов_ББ") || finalFilePath.Contains("РасчитатьНагрузки_ББ"))
