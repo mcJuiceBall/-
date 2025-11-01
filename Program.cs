@@ -297,6 +297,7 @@ namespace ВыполнитьЗадачиSolidWorks
                     fpfinal = Costants.filePathFinal;
                     fpfinalbad = Costants.filePathFinalBad;
                 }
+
                 string finalFilePath = Path.Combine(success ? fpfinal : fpfinalbad, Path.GetFileName(e));
 
                 if (finalFilePath.Contains("ЧертежиФасадов_ББ") || finalFilePath.Contains("РасчитатьНагрузки_ББ"))
@@ -339,7 +340,6 @@ namespace ВыполнитьЗадачиSolidWorks
                 {
 
                     Log($"Попытка {i} создать чертеж и модель");
-
 
                     threadException = null;
                     Thread thread = new Thread(() =>

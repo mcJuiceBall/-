@@ -208,9 +208,9 @@ namespace ЗавестиАнтарус
         /// Сохранение файла в PDF и DWG в целевую папку
         /// </summary>
         /// <param name="swDrawing">текущий чертеж</param>
-        public static void SaveAsPDFandDWG(string Cod1C)
+        public static void SaveAsPDFandDWG(string Cod1C,string rootdir)
         {
-                string FilePath = $@"{Costants.RootDirectory}\{Cod1C}\2D {Cod1C}";
+                string FilePath = $@"{rootdir}\{Cod1C}\2D {Cod1C}";
                 ((ModelDoc2)swDrawing).SaveAs(FilePath + ".PDF");
                 ((ModelDoc2)swDrawing).SaveAs(FilePath + ".DWG");
         }
@@ -462,7 +462,7 @@ namespace ЗавестиАнтарус
             {
                 throw new Exception("Ошибка при скрытии лишних размеров");
             }
-            if (!TryExecute(() => SaveAsPDFandDWG(Cod1C), "Сохранить в DWG и PDF"))
+            if (!TryExecute(() => SaveAsPDFandDWG(Cod1C,rd), "Сохранить в DWG и PDF"))
             {
                 throw new Exception("Ошибка при сохранении в DWG и PDF");
             }
