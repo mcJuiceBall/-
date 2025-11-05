@@ -62,13 +62,17 @@ namespace ВыполнитьЗадачиSolidWorks
         /// <param name="e"></param>
         private void OnFileCreated(object source, FileSystemEventArgs e)
         {
+            if (e.FullPath.Contains("~$") || e.FullPath.Contains(".tmp")) return;
+
             #region На время пока выполняем на серч
+            bool ЗавестиАнтарус=false;
             string dir =Path.GetDirectoryName(e.FullPath);
             string[] files=Directory.GetFiles(dir);
             foreach (string file in files)
             {
                 if (file.Contains("ЗавестиАнтарус.xlsx")) 
                 {
+                    ЗавестиАнтарус = true;
                     RunWithTimeout(
                     () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                     swApp => CreateDrawingAndModel(file), // Вызов метода с параметрами
@@ -79,11 +83,11 @@ namespace ВыполнитьЗадачиSolidWorks
                 }
             }
             #endregion
-            if (e.FullPath.Contains("~$")|| e.FullPath.Contains(".tmp")) return;
+            
             Log($"Обнаружен новый файл: {e.FullPath}");
             Thread.Sleep(1000);
             //Запуск программы создания 3D и 2D моделей Антарус
-            if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
+            if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx") && !ЗавестиАнтарус)
             {
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
@@ -154,6 +158,7 @@ namespace ВыполнитьЗадачиSolidWorks
 
             else
             {
+                if (ЗавестиАнтарус) return;
                 Console.WriteLine("Неизвестный тип файла: " + e.FullPath);
             }
         }
