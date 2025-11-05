@@ -62,11 +62,26 @@ namespace ВыполнитьЗадачиSolidWorks
         /// <param name="e"></param>
         private void OnFileCreated(object source, FileSystemEventArgs e)
         {
-            Console.WriteLine(e.FullPath);
+            #region На время пока выполняем на серч
+            string dir =Path.GetDirectoryName(e.FullPath);
+            string[] files=Directory.GetFiles(dir);
+            foreach (string file in files)
+            {
+                if (file.Contains("ЗавестиАнтарус.xlsx")) 
+                {
+                    RunWithTimeout(
+                    () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+                    swApp => CreateDrawingAndModel(file), // Вызов метода с параметрами
+                    "Не удалось создать 3D модель и(или) чертеж на: " + file,
+                    80,// Таймаут в секундах
+                    file
+                    );
+                }
+            }
+            #endregion
             if (e.FullPath.Contains("~$")|| e.FullPath.Contains(".tmp")) return;
             Log($"Обнаружен новый файл: {e.FullPath}");
             Thread.Sleep(1000);
-
             //Запуск программы создания 3D и 2D моделей Антарус
             if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
             {
@@ -79,7 +94,7 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
-            else if(e.FullPath.Contains("НаСерч") && e.FullPath.Contains(".xlsx"))
+            else if (e.FullPath.Contains("НаСерч") && e.FullPath.Contains(".xlsx"))
             {
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
@@ -100,16 +115,6 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
-            //else if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx"))
-            //{
-            //    RunWithTimeout(
-            //    () => SolidWorksManager.swApp,  // Инициализация SolidWorks
-            //    swApp => CreateDrawingBMI(e.FullPath), // Вызов метода с параметрами
-            //    "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
-            //    800,// Таймаут в секундах
-            //    e.FullPath
-            //    );
-            //}
 
             //Запуск программы расчета нагрузок ББ
             else if (e.FullPath.Contains("РасчитатьНагрузки_ББ") && e.FullPath.Contains(".txt"))

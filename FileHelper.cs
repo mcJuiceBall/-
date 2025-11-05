@@ -9,16 +9,23 @@ using OfficeOpenXml;
 
     public class FileHelper
     {
-        
 
-        /// <summary>
-        /// Ведедение лога действий
-        /// </summary>
-        /// <param name="message"></param>
-        public static void Log(string message)
+
+    /// <summary>
+    /// Ведедение лога действий
+    /// </summary>
+    /// <param name="message"></param>
+    public static void Log(string message)
+    {
+        try
         {
             File.AppendAllText(Costants.logFile, $"{DateTime.Now}: {message}{System.Environment.NewLine}");
         }
+        catch 
+        {
+            Console.WriteLine("Невозможно записать лог");
+        }
+    }
 
         /// <summary>
         /// Копирование файла с перезаписыванием, если такой существует

@@ -16,6 +16,7 @@ using OfficeOpenXml;
 using System.ComponentModel;
 using System.Runtime.InteropServices.ComTypes;
 using System.Collections;
+using System.Xml.Linq;
 
 namespace ЗавестиАнтарус
 {
@@ -36,29 +37,43 @@ namespace ЗавестиАнтарус
         /// </summary>
         public static void KillSelectedProcesses(HashSet<string> solidNames)
         {
-
-            // Выборка всех запущенных процессов, совпадающих по имени
+            solidNames = new HashSet<string>(solidNames, StringComparer.OrdinalIgnoreCase);
             var toKill = Process.GetProcesses()
-                .Where(p => solidNames.Contains(p.ProcessName.ToLower()));
+                            .Where(p => {
+                                try { return solidNames.Contains(p.ProcessName); }
+                                catch { return false; }                         
+                            })
+                            .ToList();
 
             foreach (var proc in toKill)
             {
+                string safename;
+
+                try { safename = proc.ProcessName; }
+                catch { safename = $"PID_{proc.Id}"; }
+
                 try
                 {
+                    if (proc.Id == Process.GetCurrentProcess().Id)
+                    {
+                        proc.Dispose();
+                        continue;
+                    }
+
                     proc.Kill();
                     // ждём до 5 секунд, пока процесс завершится
                     if (!proc.WaitForExit(5000))
                     {
-                        Log($"Процесс {proc.ProcessName} (ID={proc.Id}) не завершился за 5 секунд.");
+                        Log($"Процесс {safename} (ID={proc.Id}) не завершился за 5 секунд.");
                     }
                     else
                     {
-                        Log($"Процесс {proc.ProcessName} (ID={proc.Id}) успешно завершён.");
+                        Log($"Процесс {safename} (ID={proc.Id}) успешно завершён.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log($"Ошибка при завершении процесса {proc.ProcessName} (ID={proc.Id}): {ex.Message}");
+                    Log($"Ошибка при завершении процесса {safename} (ID={proc.Id}): {ex.Message}");
                 }
                 finally
                 {
