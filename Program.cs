@@ -21,10 +21,11 @@ namespace ВыполнитьЗадачиSolidWorks
        
         private FileSystemWatcher watcher;
 
-        public HashSet<string> wordNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public HashSet<string> officeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "winword",
-                "wordconv"
+                "wordconv",
+                "excel"
             };
 
         public HashSet<string> solidNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -64,31 +65,33 @@ namespace ВыполнитьЗадачиSolidWorks
         {
             if (e.FullPath.Contains("~$") || e.FullPath.Contains(".tmp")) return;
 
-            #region На время пока выполняем на серч
-            bool ЗавестиАнтарус=false;
-            string dir =Path.GetDirectoryName(e.FullPath);
-            string[] files=Directory.GetFiles(dir);
-            foreach (string file in files)
-            {
-                if (file.Contains("ЗавестиАнтарус.xlsx")) 
-                {
-                    ЗавестиАнтарус = true;
-                    RunWithTimeout(
-                    () => SolidWorksManager.swApp,  // Инициализация SolidWorks
-                    swApp => CreateDrawingAndModel(file), // Вызов метода с параметрами
-                    "Не удалось создать 3D модель и(или) чертеж на: " + file,
-                    80,// Таймаут в секундах
-                    file
-                    );
-                }
-            }
-            #endregion
-            
+            //#region На время пока выполняем на серч
+            //bool ЗавестиАнтарус = false;
+            //string dir = Path.GetDirectoryName(e.FullPath);
+            //string[] files = Directory.GetFiles(dir);
+
+            //foreach (string file in files)
+            //{
+            //    if (file.Contains("ЗавестиАнтарус.xlsx") && !file.Contains("~$"))
+            //    {
+            //        ЗавестиАнтарус = true;
+            //        RunWithTimeout(
+            //        () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+            //        swApp => CreateDrawingAndModel(file), // Вызов метода с параметрами
+            //        "Не удалось создать 3D модель и(или) чертеж на: " + file,
+            //        80,// Таймаут в секундах
+            //        file
+            //        );
+            //    }
+            //}
+            //#endregion
+
             Log($"Обнаружен новый файл: {e.FullPath}");
             Thread.Sleep(1000);
             //Запуск программы создания 3D и 2D моделей Антарус
-            if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx") && !ЗавестиАнтарус)
+            if (e.FullPath.Contains("ЗавестиАнтарус") && e.FullPath.Contains(".xlsx")) // Если заводим на серч то добавляем "&& !ЗавестиАнтарус"
             {
+                KillSelectedProcesses(officeNames);
                 RunWithTimeout(
                 () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                 swApp => CreateDrawingAndModel(e.FullPath), // Вызов метода с параметрами
@@ -98,16 +101,6 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
-            else if (e.FullPath.Contains("НаСерч") && e.FullPath.Contains(".xlsx"))
-            {
-                RunWithTimeout(
-                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
-                swApp => CreateDrawingAndModel(e.FullPath), // Вызов метода с параметрами
-                "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
-                80,// Таймаут в секундах
-                e.FullPath
-                );
-            }
             else if (e.FullPath.Contains("ЧертежБМИ") && e.FullPath.Contains(".xlsx"))
             {
                 RunWithTimeout(
@@ -119,12 +112,11 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
-
             //Запуск программы расчета нагрузок ББ
             else if (e.FullPath.Contains("РасчитатьНагрузки_ББ") && e.FullPath.Contains(".txt"))
             {
                KillSelectedProcesses(solidNames);
-               KillSelectedProcesses(wordNames);
+               KillSelectedProcesses(officeNames);
                 RunWithTimeout(
                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
                swApp => ProcessBBStaticLoad(e.FullPath, swApp), // Вызов метода с параметрами
@@ -156,9 +148,22 @@ namespace ВыполнитьЗадачиSolidWorks
                 );
             }
 
+            else if (e.FullPath.Contains("НаСерч") && e.FullPath.Contains(".xlsx"))
+            {
+                KillSelectedProcesses(officeNames);
+                KillSelectedProcesses(solidNames);
+                RunWithTimeout(
+                () => SolidWorksManager.swApp,  // Инициализация SolidWorks
+                swApp => CreateDrawingAndModel(e.FullPath), // Вызов метода с параметрами
+                "Не удалось создать 3D модель и(или) чертеж на: " + e.FullPath,
+                80,// Таймаут в секундах
+                e.FullPath
+                );
+            }
+
             else
             {
-                if (ЗавестиАнтарус) return;
+                //if (ЗавестиАнтарус) return;   // Если заводим на серч то добавляем
                 Console.WriteLine("Неизвестный тип файла: " + e.FullPath);
             }
         }

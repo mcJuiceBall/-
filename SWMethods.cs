@@ -598,6 +598,7 @@ namespace ЗавестиАнтарус
             ((ModelDoc2)swDrawing).SaveAs($@"\\sol.elita\Spec\.CADAutomation\Блок-Боксы\БМИ\{CodeBMI}" + ".PDF");
             ((ModelDoc2)swDrawing).SaveAs($@"\\sol.elita\Spec\.CADAutomation\Блок-Боксы\БМИ\{CodeBMI}" + ".DWG");
         }
+
         /// <summary>
         /// Проверяет доступность TEMP/TMP и при необходимости выставляет рабочую папку на процесс.
         /// </summary>
