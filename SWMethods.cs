@@ -436,16 +436,19 @@ namespace ЗавестиАнтарус
         /// <param name="e"></param>
         public static void CreateDrawingAndModel(string e) 
         {
-            string rd;
+            
 
             Log($"Начинается обработка файла: {e}");
+
             #region Определение переменных
+            string rd;
             string filePath = Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e));
             string newFileName = RenameFile(Path.Combine(Costants.RootDirectorySW, Path.GetFileName(e)));
             string Cod1C = GetCodeFromFileName(Path.GetFileNameWithoutExtension(e));
             string OpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDASM";
             string DrawOpenPath = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}.SLDDRW";
             string OpenPathSAT = $@"{Costants.RootDirectorySW}\{Path.GetFileNameWithoutExtension(newFileName)}(SAT).SLDASM";
+
             if (e.Contains("НаСерч"))
             {
                 rd = Costants.RootDirectorySEARCH;
@@ -454,6 +457,7 @@ namespace ЗавестиАнтарус
             {
                 rd = Costants.RootDirectory;
             }
+
             string FinalFolder = $@"{rd}\{Cod1C}";
             #endregion
             
@@ -468,15 +472,19 @@ namespace ЗавестиАнтарус
             {
                 throw new Exception("Ошибка при создании 3D модели");
             }
+
             swDrawing = (DrawingDoc)swApp.OpenDoc6(DrawingPath, 3, 0, "", 0, 0);
+
             if (!TryExecute(() => AutoScaleDrawing(), "Автоматическая установка масштаба"))
             {
                 throw new Exception("Ошибка при установке масштаба");
             }
+
             if(!TryExecute(() => HideExcessDimension(),"Скрыть лишние размеры"))
             {
                 throw new Exception("Ошибка при скрытии лишних размеров");
             }
+
             if (!TryExecute(() => SaveAsPDFandDWG(Cod1C,rd), "Сохранить в DWG и PDF"))
             {
                 throw new Exception("Ошибка при сохранении в DWG и PDF");

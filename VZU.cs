@@ -276,6 +276,7 @@ namespace VZU
             bool updated = false;
             for (int r = 0; r < table.Rows; r++)
             {
+                table.Visible = false;
                 for (int c = 0; c < table.Columns; c++)
                 {
                     string cellText = table.GetText(r, c);
@@ -362,9 +363,7 @@ namespace VZU
                 acad.Quit();
             }
         }
-
     }
-
 
     static class PlotWait
     {

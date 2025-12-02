@@ -215,7 +215,6 @@ namespace ВыполнитьЗадачиSolidWorks
             CopyFileWithOverwrite(filePath, Costants.fileConfigBBStaticLoad);
             //Запуск расчета прочности
             swApp.RunMacro(Costants.fileMacroBBStaticLoad, "НагрузкиББ", "SetSizes");
- 
         }
 
         /// <summary>
@@ -295,7 +294,6 @@ namespace ВыполнитьЗадачиSolidWorks
                 success = false;
                 KillSelectedProcesses(solidNames);
             }
-
             finally
             {
                 //Формирование конечного пути файла с параметрами
@@ -345,7 +343,6 @@ namespace ВыполнитьЗадачиSolidWorks
         {
             bool success = true;
             bool completed = false;
-
             int i = 1;
             Exception threadException = null;
 
@@ -353,7 +350,6 @@ namespace ВыполнитьЗадачиSolidWorks
             {
                 while (completed == false && (i <= 2))
                 {
-
                     Log($"Попытка {i} создать чертеж и модель");
 
                     threadException = null;

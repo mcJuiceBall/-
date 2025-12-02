@@ -151,15 +151,16 @@ using System.Threading;
             renamed = Regex.Replace(renamed, " СоздатьЧертежБМИ", "");
             renamed = Regex.Replace(renamed, " НаСерч", "");
 
-        //Новый путь файла
-        string newPath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, renamed);
+            //Новый путь файла
+            string newPath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, renamed);
+
             return newPath;
     }
 
         /// <summary>
         /// Перенос файла с добавлением даты в конце
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="filePath"></param>
         /// <returns></returns>
         public static string RemoveFileWithAddPostFix(string filePath)
         {
@@ -227,8 +228,6 @@ using System.Threading;
             return null;
         }
 
-
-
         /// <summary>
         /// Считывание параметров с текстового файла c разделителем 
         /// </summary>
@@ -237,27 +236,27 @@ using System.Threading;
         /// <returns>Словарь с ключами и параметрами</returns>
         public static Dictionary<string, string> ReadParameters(string path, char splitter)
         {
-                var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-                using (var reader = new StreamReader(path, Encoding.UTF8))
+            using (var reader = new StreamReader(path, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        if (string.IsNullOrWhiteSpace(line))
-                            continue;
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
 
-                        int idx = line.IndexOf(splitter);
-                        if (idx <= 0)
-                            continue;
+                    int idx = line.IndexOf(splitter);
+                    if (idx <= 0)
+                        continue;
 
-                        string key = line.Substring(0, idx).Trim();
-                        string value = line.Substring(idx + 1).Trim(); 
-                        result[key] = value;
-                    }
+                    string key = line.Substring(0, idx).Trim();
+                    string value = line.Substring(idx + 1).Trim(); 
+                    result[key] = value;
                 }
+            }
 
-                return result;
+            return result;
         }
 
     }

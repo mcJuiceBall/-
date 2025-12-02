@@ -183,11 +183,8 @@ public class PumpFrame
    
     public static void CreateDrawingPumpFrame(string filepath)
     {
-
         var key_drawing=FileHelper.GetKeyValue(filepath);
-
         double Dbl(string key) => double.Parse(key_drawing[key]);
-
         double Lp = Dbl("Lp");
         double L1p = Dbl("L1p");
         double Bp = Dbl("Bp");
@@ -204,9 +201,6 @@ public class PumpFrame
         string material = key_drawing["МатериалКоллектора"];
         int D = OutD(DN, material);
         double Lmin = Hp - (ChannelUtils.Channel(shveller, "Высота") + D / 2);
-
     }
-
-
 }
  
