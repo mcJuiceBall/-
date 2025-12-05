@@ -21,12 +21,15 @@ using static FileHelper;
 
 namespace VZU
 {
+    /// <summary>
+    /// Класс создания всей документации на ВЗУ
+    /// </summary>
     public class CreateDrawingVZU
     {
         public static AcadApplication acad;
 
         /// <summary>
-        /// Определяет тип документации и запускает соответствующий метод
+        /// Определяет тип полученнго документа и запускает методы соответствующие данному классу
         /// </summary>
         /// <param name="filepath">Путь до файла с параметра</param>
         public static void VZUCreateDWG(string filepath)
@@ -82,13 +85,12 @@ namespace VZU
         }
 
         /// <summary>
-        /// Создает чертеж на ВЗУ
+        /// Открывает документ, обновляет данные, отправляет на печать
         /// </summary>
         /// <param name="pathfile">Путь до файла который нужно открыть</param>
         /// <param name="finalpath">Путь до финального файла</param>
         static void CreateVZU(string pathfile, string finalpath)
         {
-
             try
             {
                 AcadDocument doc = acad.Documents.Open(pathfile);
@@ -111,7 +113,7 @@ namespace VZU
         }
 
         /// <summary>
-        /// 
+        /// Функция читает файл задание, записывает в файл-параметры, возвращает путь до нужного файла
         /// </summary>
         /// <param name="filePath">Путь до файла с параметрами</param>
         /// <returns></returns>
@@ -157,7 +159,7 @@ namespace VZU
         
 
         /// <summary>
-        /// 
+        /// Функция формирующая путь до файла, возвращает код товара
         /// </summary>
         /// <param name="filepath"></param>
         /// <returns></returns>
@@ -249,6 +251,13 @@ namespace VZU
             }
         }
 
+        /// <summary>
+        /// Замена атрибута у экземпляра класса AcadDimension
+        /// </summary>
+        /// <param name="dim"></param>
+        /// <param name="baseValue"></param>
+        /// <param name="keyValue"></param>
+        /// <returns></returns>
         static bool ProcessDimension(AcadDimension dim, string baseValue, string keyValue)
         {
             string[] prefixes = { "", "D1=", "D2=" };
@@ -271,6 +280,13 @@ namespace VZU
             return false;
         }
 
+        /// <summary>
+        /// Замена атрибута у экземпляра класса AcadTable
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="baseValue"></param>
+        /// <param name="keyValue"></param>
+        /// <returns></returns>
         static bool ProcessTable(AcadTable table, string baseValue, string keyValue)
         {
             bool updated = false;
@@ -290,6 +306,13 @@ namespace VZU
             return updated;
         }
 
+        /// <summary>
+        /// Замена атрибута у экземпляра класса AcadText
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="baseValue"></param>
+        /// <param name="keyValue"></param>
+        /// <returns></returns>
         static bool ProcessText(AcadText text, string baseValue, string keyValue)
         {
             string content = text.TextString;
@@ -301,6 +324,13 @@ namespace VZU
             return false;
         }
 
+        /// <summary>
+        /// Замена атрибута у экземпляра класса AcadMText
+        /// </summary>
+        /// <param name="mtext"></param>
+        /// <param name="baseValue"></param>
+        /// <param name="keyValue"></param>
+        /// <returns></returns>
         static bool ProcessMText(AcadMText mtext, string baseValue, string keyValue)
         {
             string content = mtext.TextString;
@@ -312,6 +342,13 @@ namespace VZU
             return false;
         }
 
+        /// <summary>
+        /// Замена атрибута у экземпляра класса AcadMLeader
+        /// </summary>
+        /// <param name="mleader"></param>
+        /// <param name="baseValue"></param>
+        /// <param name="keyValue"></param>
+        /// <returns></returns>
         static bool ProcessMLeader(AcadMLeader mleader, string baseValue, string keyValue)
         {
             if (mleader == null) return false;
@@ -334,6 +371,12 @@ namespace VZU
             return false;
         }
 
+        /// <summary>
+        /// Метод читающий файл параметры, изменяющий значения на чертеже и отправляющий на печать
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="filepath"></param>
+        /// <param name="finalpath"></param>
         static void CreatePDFFileVZU(string file, string filepath, string finalpath)
         {
             var result = ReadParameters(filepath, '=');
@@ -371,6 +414,13 @@ namespace VZU
         static _DAcadApplicationEvents_BeginPlotEventHandler onBegin;
         static _DAcadApplicationEvents_EndPlotEventHandler onEnd;
 
+        /// <summary>
+        /// Метод отправляющий файл на печать в PDF и ожидание когда он создастся
+        /// </summary>
+        /// <param name="acad"></param>
+        /// <param name="doc"></param>
+        /// <param name="pdfPath"></param>
+        /// <exception cref="TimeoutException"></exception>
         public static void PlotToPdfAndWait(AcadApplication acad, AcadDocument doc, string pdfPath)
         {
             try { doc.SetVariable("BACKGROUNDPLOT", 0); } catch { }
@@ -401,6 +451,11 @@ namespace VZU
         static void BeginPlot(string drawingName) => done.Reset();
         static void EndPlot(string drawingName) => done.Set();
 
+        /// <summary>
+        /// Ожидание стабилизации сохраняемого файла
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="timeout"></param>
         static void WaitFileStable(string path, TimeSpan timeout)
         {
             var until = DateTime.UtcNow + timeout;
@@ -451,26 +506,26 @@ namespace VZU
         public static bool ClosePdfWindowByTitle(string pdfPath, TimeSpan timeout)
         {
             if (string.IsNullOrEmpty(pdfPath)) return false;
-            string needle = System.IO.Path.GetFileName(pdfPath);   // "file.pdf"
+            string needle = System.IO.Path.GetFileName(pdfPath);
             if (string.IsNullOrEmpty(needle)) return false;
             string needleLower = needle.ToLowerInvariant();
 
             DateTime until = DateTime.UtcNow + timeout;
             IntPtr target = IntPtr.Zero;
 
-            // Поищем окно несколько раз — вьюер может открыться с задержкой
+            // Ищем окно несколько раз
             while (DateTime.UtcNow < until)
             {
                 target = FindWindowByTitleContains(needleLower);
                 if (target != IntPtr.Zero)
                 {
-                    // Вежливо закрываем
+                    // Закрываем
                     PostMessage(target, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
 
                     // ждём, что окно исчезнет
                     if (WaitWindowGone(target, TimeSpan.FromSeconds(5)))
                         return true;
-                    // если не исчезло — попробуем найти заново (вдруг хэндл сменился)
+                    // если не исчезло — попробуем найти заново (если хэндл сменился)
                 }
                 Thread.Sleep(200);
             }
