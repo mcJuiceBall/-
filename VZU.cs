@@ -292,13 +292,13 @@ namespace VZU
             bool updated = false;
             for (int r = 0; r < table.Rows; r++)
             {
-                table.Visible = false;
                 for (int c = 0; c < table.Columns; c++)
                 {
                     string cellText = table.GetText(r, c);
                     if (!string.IsNullOrEmpty(cellText) && cellText.Contains(baseValue))
                     {
-                        table.SetText(r, c, cellText.Replace(baseValue, keyValue));
+                        string celltext = cellText.Replace(baseValue, keyValue);
+                        table.SetText(r, c, celltext);
                         updated = true;
                     }
                 }
@@ -474,7 +474,7 @@ namespace VZU
                     else stable = 0;
                     last = sz;
                 }
-                Thread.Sleep(200);
+                Thread.Sleep(1000);
             }
         }
 

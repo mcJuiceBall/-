@@ -269,6 +269,7 @@ namespace ВыполнитьЗадачиSolidWorks
                         Log($"Попытка {i} неуспешна—{logMessage}");
                         success = false;
                         KillSelectedProcesses(solidNames);
+                        KillSelectedProcesses(officeNames);
                     }
                     else
                     {
@@ -277,6 +278,7 @@ namespace ВыполнитьЗадачиSolidWorks
                             Log($"Попытка {i} завершилась исключением: {threadException.Message}");
                             success = false;
                             KillSelectedProcesses(solidNames);
+                            KillSelectedProcesses(officeNames);
                         }
                         else
                         {
@@ -293,6 +295,7 @@ namespace ВыполнитьЗадачиSolidWorks
                 Log($"Основное действие завершилось с ошибкой: {ex.Message}");
                 success = false;
                 KillSelectedProcesses(solidNames);
+                KillSelectedProcesses(officeNames);
             }
             finally
             {

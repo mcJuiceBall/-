@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ELITA")]
 [assembly: AssemblyProduct("Автоматизация процессов SolidWorks")]
-[assembly: AssemblyCopyright("Copyright © ELITA 2025")]
+[assembly: AssemblyCopyright("Copyright © ELITA 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
